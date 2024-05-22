@@ -3,9 +3,17 @@
 
 # CSE_MCP23017
 
-**CSE_MCP23017** is an Arduino library from **CIRCUITSTATE Electronics** to interface the Microchip **MCP23017** 16-bit I/O expander IC. The library supports all features of MCP23017 including GPIO operations, and interrupts. All functions of the chip can be accessed via Arduino-style APIs. The library can run on any Arduino-supported microcontroller with an I2C interface.
+**CSE_MCP23017** is an Arduino library from **CIRCUITSTATE Electronics** to interface the Microchip **MCP23017** 16-bit I/O expander IC. The library supports all features of MCP23017 including GPIO operations, and interrupts. All functions of the chip can be accessed via familiar Arduino-style APIs. The library can run on any Arduino-supported microcontroller with an I2C interface.
 
 This library is in pre-release stage. Any feedback is highly appreciated.
+
+# Features
+
+- I2C interface with multiple IO expanders on the same bus.
+- GPIO pin read and write operations.
+- Port read and write operations.
+- GPIO input polarity control.
+- Full interrupt support for multiple IO expanders.
 
 # Installation
 
