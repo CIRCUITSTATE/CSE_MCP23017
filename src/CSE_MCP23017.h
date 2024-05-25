@@ -1,5 +1,5 @@
 
-//===================================================================================//
+//============================================================================================//
 
 #ifndef CSE_MCP23017_H
 #define CSE_MCP23017_H
@@ -8,7 +8,7 @@
 #include <Wire.h>
 // #include <string>
 
-//===================================================================================//
+//============================================================================================//
 
 #define   debugPort   Serial
 
@@ -100,28 +100,33 @@
 #define   MCP23017_INT_FALLING        2U  // Interrupt on falling edge
 #define   MCP23017_INT_RISING         3U  // Interrupt on rising edge
 
-//===================================================================================//
+//============================================================================================//
 // Macro Functions
 
-// Translates to sequential (group) address for both port A and B.
+// MCP23017 supports two methods for accesing the internal registers. In BANK = 0 mode, the
+// register addresses alternate between Port A and B. In BANK = 1 mode, the register addresses
+// associated with each port is sequential.
+// But because the shadow copy of the registers do not have this distinction, they are always
+// stored in the sequential mode.
+// The following macro translates alternate mode address to sequential mode.
 // All port A register addresses are even numbers, and only needs a single Rsh.
 // All port B register addresses are odd numbers, and requires a single Rsh and addition of 16.
 #define TRANSLATE(a) ((a >> 1) + (0x10U * (a >> 1)))
 
 // #define READ_PIN_REGISTER(pin, reg, translate) (regBank[reg + (pin >> 3)] = read((reg + (pin >> 3)), translate))
 
-//===================================================================================//
+//============================================================================================//
 // Typedefs
 
 typedef void (*hostCallback_t)(void);  // The type of callback the host MCU will make
 typedef void (*ioeCallback_t)(int8_t);  // The type of callback the IO expander will make
 
-//===================================================================================//
+//============================================================================================//
 // Forward declarations
 
 String toBinary (uint64_t number, uint16_t width);
 
-//===================================================================================//
+//============================================================================================//
 
 class CSE_MCP23017 {
   private:
@@ -130,8 +135,8 @@ class CSE_MCP23017 {
       GROUP
     };
     
-    uint8_t resetPin = 0; // GPIO where reset pin of IOE is connected
-    uint8_t deviceAddress = 0;
+    uint8_t resetPin = 0; // GPIO where the reset pin of IOE is connected
+    uint8_t deviceAddress = 0; // I2C device address
     uint8_t i2cTxBuffer [22] = {0};  // I2C transmit buffer
     bankModes bankMode = PAIR; // 0 (false) = pair mode, 1 (true)= group mode
     uint8_t addressMode = 0; // 0 = sequential mode, 1 = byte mode (no address auto-increment)
@@ -139,18 +144,18 @@ class CSE_MCP23017 {
     int8_t attachPinB = -1; // Interrupt attach pin B
     uint8_t intOutType = 0; // Interrupt output type
     bool isIntConfigured = false; // Is interrupt configured
-    uint8_t ioeId = 0;  // IO expander object index
+    uint8_t ioeIndex = 0;  // IO expander object index
 
     ioeCallback_t isrPtrList [MCP23017_PINCOUNT] = {NULL};  // Array to hold interrupt function pointers
     uint8_t isrModeList [MCP23017_PINCOUNT] = {0};
 
-    bool deviceReadError;
-    bool deviceWriteError;
+    bool deviceReadError; // Set when an I2C read error occurs
+    bool deviceWriteError; // Set when an I2C write error occurs
 
     uint8_t attachHostInterrupt();
     
   public:
-    enum gpioPin {
+    enum gpioPin {  // GPIO pin names list
       GPIOA0,
       GPIOA1,
       GPIOA2,
@@ -169,14 +174,14 @@ class CSE_MCP23017 {
       GPIOB7
     };
     
-    uint8_t regBank [22] = {0};  //register content
-    int8_t intPin;
-    int8_t intPinState;
-    int8_t intPinCapState;
-    hostCallback_t callback;
-    volatile bool interruptActive;
-    volatile bool stateReverted;
-    int8_t lastIntPin;
+    uint8_t regBank [22] = {0};  // Shadow copy of the register content
+    int8_t intPin;  // Interrupt pin
+    int8_t intPinState; // Interrupt pin state
+    int8_t intPinCapState;  // Interrupt pin capture state
+    hostCallback_t callback;  // Callback function for interrupt
+    volatile bool interruptActive;  // Set when interrupt is active
+    volatile bool stateReverted;  // 
+    int8_t lastIntPin;  // Last interrupt pin
     
     CSE_MCP23017 (uint8_t resetPin, uint8_t address);
     ~CSE_MCP23017();
@@ -186,7 +191,7 @@ class CSE_MCP23017 {
     uint8_t write (uint8_t regAddress, uint8_t byteOne, bool translateAddress = false);
     uint8_t write (bool translateAddress = false);
     uint8_t read (uint8_t regAddress, bool translateAddress = false);
-    uint8_t readRegisters (bool translateAddress = false);
+    uint8_t readAll (bool translateAddress = false);
     uint8_t update (uint8_t regOffset, uint8_t *buffer, uint8_t bufferOffset, uint8_t length);
     uint8_t update (uint8_t regOffset, uint8_t byteOne, uint8_t byteTwo);
     bool writeError();
@@ -217,5 +222,5 @@ class CSE_MCP23017 {
 
 #endif
 
-//===================================================================================//
+//============================================================================================//
 
